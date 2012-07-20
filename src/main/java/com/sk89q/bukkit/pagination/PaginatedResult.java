@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.sk89q.commandbook.commands;
+package com.sk89q.bukkit.pagination;
 
 import java.util.ArrayList;
 import java.util.Collection;

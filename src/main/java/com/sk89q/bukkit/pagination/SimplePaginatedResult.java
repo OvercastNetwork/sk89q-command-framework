@@ -1,6 +1,7 @@
-package com.sk89q.commandbook.commands;
+package com.sk89q.bukkit.pagination;
 
 import org.bukkit.ChatColor;
+
 
 public abstract class SimplePaginatedResult<T> extends PaginatedResult<T> {
     protected final String header;
