@@ -15,6 +15,17 @@
     <developerConnection>scm:git:git@github.com:ProjectAres/sk89q-command-framework.git</developerConnection>
   </scm>
 
+  <distributionManagement>
+    <repository>
+      <id>repo.oc.tc</id>
+      <url>http://repo.oc.tc/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>repo.oc.tc</id>
+      <url>http://repo.oc.tc/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <repositories>
     <repository>
       <id>bukkit-repo</id>
