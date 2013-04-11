@@ -1,13 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sk89q</groupId>
-  <artifactId>sk89q-command-framework</artifactId>
-  <version>0.4-SNAPSHOT</version>
-  <name>sk89q-command-framework</name>
-  <description>sk89q-command-framework is sk89q's command system from WorldEdit factored out</description>
-  <properties>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+  <artifactId>command-framework-parent</artifactId>
+  <packaging>pom</packaging>
+  <version>static</version>
+  <name>Sk89q Command Framework</name>
+  <description>sk89q's command system from WorldEdit factored out</description>
+
+  <modules>
+    <module>core</module>
+    <module>bukkit</module>
+    <module>bungee</module>
+  </modules>
 
   <scm>
     <connection>scm:git:git://github.com/ProjectAres/sk89q-command-framework.git</connection>
@@ -25,22 +29,6 @@
       <url>http://repo.oc.tc/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
-
-  <repositories>
-    <repository>
-      <id>bukkit-repo</id>
-      <url>http://repo.bukkit.org/content/groups/public</url>
-    </repository>
-  </repositories>
-
-  <dependencies>
-    <!-- Bukkit -->
-    <dependency>
-      <groupId>org.bukkit</groupId>
-      <artifactId>bukkit</artifactId>
-      <version>1.4.7-R1.0</version>
-    </dependency>
-  </dependencies>
 
   <build>
     <sourceDirectory>${basedir}/src/main/java/</sourceDirectory>
@@ -66,4 +54,8 @@
       </plugin>
     </plugins>
   </build>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 </project>

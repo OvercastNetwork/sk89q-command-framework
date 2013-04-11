@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.sk89q</groupId>
+    <artifactId>command-framework-parent</artifactId>
+    <version>static</version>
+  </parent>
+  <artifactId>command-framework-bukkit</artifactId>
+  <packaging>jar</packaging>
+  <version>0.4-SNAPSHOT</version>
+  <name>Sk89q Command Framework for Bukkit</name>
+  <description>Supporting classes for running the command framework on Bukkit servers.</description>
+
+  <repositories>
+    <repository>
+      <id>bukkit-repo</id>
+      <url>http://repo.bukkit.org/content/groups/public</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.sk89q</groupId>
+      <artifactId>command-framework-core</artifactId>
+      <version>0.4-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bukkit</groupId>
+      <artifactId>bukkit</artifactId>
+      <version>1.4.7-R1.0</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.0</version>
+        <configuration>
+          <artifactSet>
+            <includes>
+              <include>com.sk89q:command-framework-core</include>
+            </includes>
+          </artifactSet>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
