@@ -16,15 +16,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.sk89q.bukkit.pagination;
+package com.sk89q.minecraft.util.pagination;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.bukkit.command.CommandSender;
-
 import com.sk89q.minecraft.util.commands.CommandException;
+import com.sk89q.minecraft.util.commands.WrappedCommandSender;
 
 /**
  * Commands that wish to display a paginated list of results can use this class to do
@@ -42,11 +41,11 @@ public abstract class PaginatedResult<T> {
         this.resultsPerPage = resultsPerPage;
     }
 
-    public void display(CommandSender sender, Collection<? extends T> results, int page) throws CommandException {
+    public void display(WrappedCommandSender sender, Collection<? extends T> results, int page) throws CommandException {
         this.display(sender, new ArrayList<T>(results), page);
     }
 
-    public void display(CommandSender sender, List<? extends T> results, int page) throws CommandException {
+    public void display(WrappedCommandSender sender, List<? extends T> results, int page) throws CommandException {
         if (results.size() == 0) throw new CommandException("No results match!");
 
         int maxPages = results.size() / this.resultsPerPage + 1;
