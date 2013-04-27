@@ -1,6 +1,6 @@
-package com.sk89q.bukkit.pagination;
+package com.sk89q.minecraft.util.pagination;
 
-import org.bukkit.ChatColor;
+import com.sk89q.minecraft.util.commands.ChatColor;
 
 
 public abstract class SimplePaginatedResult<T> extends PaginatedResult<T> {

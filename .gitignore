@@ -25,3 +25,8 @@ dependency-reduced-pom.xml
 *.xcworkspace
 xcuserdata
 *class
+
+# IntelliJ IDEA generated files
+*.iml
+*.ipr
+*.iws
