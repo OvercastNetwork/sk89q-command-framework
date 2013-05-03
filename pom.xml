@@ -14,9 +14,9 @@
   </modules>
 
   <scm>
-    <connection>scm:git:git://github.com/ProjectAres/sk89q-command-framework.git</connection>
-    <url>https://github.com/ProjectAres/sk89q-command-framework</url>
-    <developerConnection>scm:git:git@github.com:ProjectAres/sk89q-command-framework.git</developerConnection>
+    <connection>scm:git:git://github.com/OvercastNetwork/sk89q-command-framework.git</connection>
+    <developerConnection>scm:git:git@github.com:OvercastNetwork/sk89q-command-framework.git</developerConnection>
+    <url>https://github.com/OvercastNetwork/sk89q-command-framework</url>
   </scm>
 
   <distributionManagement>
