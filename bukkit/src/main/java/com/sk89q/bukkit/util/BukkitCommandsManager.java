@@ -1,5 +1,6 @@
 package com.sk89q.bukkit.util;
 
+import com.sk89q.minecraft.util.commands.ConsoleCommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 
@@ -18,7 +19,7 @@ public class BukkitCommandsManager extends CommandsManager<CommandSender> {
     @Override
     public void checkSender(CommandSender sender, Method method) throws CommandException {
         if (!method.isAnnotationPresent(Console.class) && sender instanceof ConsoleCommandSender) {
-            throw new CommandException("You must be a player to execute this command.");
+            throw new ConsoleCommandException();
         }
     }
 }
