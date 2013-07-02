@@ -19,19 +19,14 @@
 
 package com.sk89q.minecraft.util.commands;
 
+import com.sk89q.util.StringUtil;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.sk89q.util.StringUtil;
 
 /**
  * <p>Manager for handling commands. This allows you to easily process commands,
@@ -425,6 +420,8 @@ public abstract class CommandsManager<T> {
         executeMethod(null, args, player, newMethodArgs, 0);
     }
 
+    public abstract void checkSender(T sender, Method method) throws CommandException;
+
     /**
      * Attempt to execute a command.
      *
@@ -453,6 +450,7 @@ public abstract class CommandsManager<T> {
         }
 
         checkPermission(player, method);
+        checkSender(player, method);
 
         int argsCount = args.length - 1 - level;
 

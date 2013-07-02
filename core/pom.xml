@@ -7,7 +7,7 @@
   </parent>
   <artifactId>command-framework-core</artifactId>
   <packaging>jar</packaging>
-  <version>0.4-SNAPSHOT</version>
+  <version>0.4.1-SNAPSHOT</version>
   <name>Sk89q Command Fraework Core</name>
   <description>Core classes for the sk89q command framework.</description>
 </project>
