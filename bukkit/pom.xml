@@ -7,7 +7,7 @@
   </parent>
   <artifactId>command-framework-bukkit</artifactId>
   <packaging>jar</packaging>
-  <version>0.4-SNAPSHOT</version>
+  <version>0.4</version>
   <name>Sk89q Command Framework for Bukkit</name>
   <description>Supporting classes for running the command framework on Bukkit servers.</description>
 
