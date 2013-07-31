@@ -7,7 +7,7 @@
   </parent>
   <artifactId>command-framework-bungee</artifactId>
   <packaging>jar</packaging>
-  <version>0.4</version>
+  <version>0.5-SNAPSHOT</version>
   <name>Sk89q Command Framework for BungeeCord</name>
   <description>Supporting classes for using the command framework on BungeeCord.</description>
 
