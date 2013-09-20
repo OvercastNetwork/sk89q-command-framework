@@ -22,7 +22,7 @@
     <dependency>
       <groupId>com.sk89q</groupId>
       <artifactId>command-framework-core</artifactId>
-      <version>0.4-SNAPSHOT</version>
+      <version>0.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>net.md-5</groupId>
