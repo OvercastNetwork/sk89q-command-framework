@@ -21,12 +21,12 @@
 
   <distributionManagement>
     <repository>
-      <id>repo.oc.tc</id>
-      <url>http://repo.oc.tc/content/repositories/releases</url>
+      <id>overcast-deployment</id>
+      <url>https://repo.oc.tc/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
-      <id>repo.oc.tc</id>
-      <url>http://repo.oc.tc/content/repositories/snapshots</url>
+      <id>overcast-deployment</id>
+      <url>https://repo.oc.tc/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
