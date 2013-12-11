@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.sk89q</groupId>
     <artifactId>command-framework-parent</artifactId>
-    <version>static</version>
+    <version>0.5-SNAPSHOT</version>
   </parent>
   <artifactId>command-framework-bukkit</artifactId>
   <packaging>jar</packaging>
