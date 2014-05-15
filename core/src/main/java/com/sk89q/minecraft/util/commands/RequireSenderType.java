@@ -22,10 +22,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * This annotation indicates that a command can be used from the console.
+ * Specify what value of CommandSender's can execute this command.
  *
- * @author sk89q
+ * @author LK-
  */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Console {
+public @interface RequireSenderType {
+
+    WrappedCommandSender.Type value();
 }

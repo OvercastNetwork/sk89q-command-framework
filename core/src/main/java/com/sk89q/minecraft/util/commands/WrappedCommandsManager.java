@@ -5,4 +5,9 @@ public class WrappedCommandsManager extends CommandsManager<WrappedCommandSender
     public boolean hasPermission(WrappedCommandSender player, String perm) {
         return player.hasPermission(perm);
     }
+
+    @Override
+    public WrappedCommandSender.Type getType(WrappedCommandSender player) {
+        return player.getType();
+    }
 }

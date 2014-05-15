@@ -478,6 +478,14 @@ public abstract class CommandsManager<T> {
             CommandAlias aCmd = method.getAnnotation(CommandAlias.class);
             executeMethod(parent, aCmd.value(), player, methodArgs, level);
         } else {
+            if (method.isAnnotationPresent(RequireSenderType.class)) {
+                WrappedCommandSender.Type requiredType = method.getAnnotation(RequireSenderType.class).value();
+
+                if (!getType(player).equals(requiredType)) {
+                    throw new CommandUsageException("Wrong sender type.", String.format("You need to be a %s to use this command!", requiredType.name().toLowerCase()));
+                }
+            }
+
             Command cmd = method.getAnnotation(Command.class);
 
             String[] newArgs = new String[args.length - level];
@@ -574,6 +582,14 @@ public abstract class CommandsManager<T> {
      * @return
      */
     public abstract boolean hasPermission(T player, String perm);
+
+    /**
+     * Get the type of the CommandSender.
+     *
+     * @param player
+     * @return
+     */
+    public abstract WrappedCommandSender.Type getType(T player);
 
     /**
      * Get the injector used to create new instances. This can be
