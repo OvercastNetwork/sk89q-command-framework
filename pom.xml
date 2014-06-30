@@ -31,7 +31,7 @@
   </distributionManagement>
 
   <build>
-    <sourceDirectory>${basedir}/src/main/java/</sourceDirectory>
+    <sourceDirectory>${project.basedir}/src/main/java/</sourceDirectory>
 
     <!-- Plugins -->
     <plugins>
