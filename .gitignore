@@ -1,27 +1,8 @@
-# Maven generated files
-target
+# Maven
+target/
+
+# Java
+*.class
 *.jar
-dependency-reduced-pom.xml
-
-# Mac OSX generated files
-.DS_Store
-
-# Eclipse generated files
-.classpath
-.project
-.settings
-
-# Vim generated files
-*~
-*.swp
-
-# XCode 3 and 4 generated files
-*.mode1
-*.mode1v3
-*.mode2v3
-*.perspective
-*.perspectivev3
-*.pbxuser
-*.xcworkspace
-xcuserdata
-*class
+*.war
+*.ear
