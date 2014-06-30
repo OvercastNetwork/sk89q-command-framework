@@ -49,10 +49,16 @@ public abstract class PaginatedResult<T> {
         if (results.size() == 0) throw new CommandException("No results match!");
 
         int maxPages = results.size() / this.resultsPerPage + 1;
+
+        // If the content divides perfectly, eg (18 entries, and 9 per page)
+        // we end up with a blank page this handles this case
+        if (results.size() % this.resultsPerPage == 0) {
+            maxPages--;
+        }
+
         if (page <= 0 || page > maxPages) throw new CommandException("Unknown page selected! " + maxPages + " total pages.");
 
         sender.sendMessage(this.formatHeader(page, maxPages));
-
         for (int i = this.resultsPerPage * (page - 1); i < this.resultsPerPage * page && i < results.size(); i++) {
             sender.sendMessage(this.format(results.get(i), i));
         }

@@ -1,20 +1,21 @@
-// $Id$
 /*
- * Copyright (C) 2010 sk89q <http://www.sk89q.com> and contributors
+ * WorldEdit, a Minecraft world manipulation toolkit
+ * Copyright (C) sk89q <http://www.sk89q.com>
+ * Copyright (C) WorldEdit team and contributors
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.sk89q.minecraft.util.commands;
 
@@ -27,15 +28,22 @@ import java.util.Map;
 import java.util.Set;
 
 public class CommandContext {
+    
     protected final String command;
     protected final List<String> parsedArgs;
     protected final List<Integer> originalArgIndices;
     protected final String[] originalArgs;
     protected final Set<Character> booleanFlags = new HashSet<Character>();
     protected final Map<Character, String> valueFlags = new HashMap<Character, String>();
+    protected final SuggestionContext suggestionContext;
+    protected final CommandLocals locals;
+
+    public static String[] split(String args) {
+        return args.split(" ", -1);
+    }
 
     public CommandContext(String args) throws CommandException {
-        this(args.split(" "), null);
+        this(args.split(" ", -1), null);
     }
 
     public CommandContext(String[] args) throws CommandException {
@@ -43,28 +51,50 @@ public class CommandContext {
     }
 
     public CommandContext(String args, Set<Character> valueFlags) throws CommandException {
-        this(args.split(" "), valueFlags);
+        this(args.split(" ", -1), valueFlags);
+    }
+
+    public CommandContext(String args, Set<Character> valueFlags, boolean allowHangingFlag) 
+            throws CommandException {
+        this(args.split(" ", -1), valueFlags, allowHangingFlag, new CommandLocals());
+    }
+
+    public CommandContext(String[] args, Set<Character> valueFlags) throws CommandException {
+        this(args, valueFlags, false, null);
     }
 
     /**
-     * @param args An array with arguments. Empty strings outside quotes will be removed.
-     * @param valueFlags A set containing all value flags. Pass null to disable value flag parsing.
-     * @throws CommandException This is thrown if flag fails for some reason.
+     * Parse the given array of arguments.
+     * 
+     * <p>Empty arguments are removed from the list of arguments.</p>
+     * 
+     * @param args an array with arguments
+     * @param valueFlags a set containing all value flags (pass null to disable value flag parsing)
+     * @param allowHangingFlag true if hanging flags are allowed
+     * @param locals the locals, null to create empty one
+     * @throws CommandException thrown on a parsing error
      */
-    public CommandContext(String[] args, Set<Character> valueFlags) throws CommandException {
+    public CommandContext(String[] args, Set<Character> valueFlags, 
+            boolean allowHangingFlag, CommandLocals locals) throws CommandException {
         if (valueFlags == null) {
             valueFlags = Collections.emptySet();
         }
 
         originalArgs = args;
         command = args[0];
+        this.locals = locals != null ? locals : new CommandLocals();
+        boolean isHanging = false;
+        SuggestionContext suggestionContext = SuggestionContext.hangingValue();
 
         // Eliminate empty args and combine multiword args first
         List<Integer> argIndexList = new ArrayList<Integer>(args.length);
         List<String> argList = new ArrayList<String>(args.length);
         for (int i = 1; i < args.length; ++i) {
+            isHanging = false;
+            
             String arg = args[i];
             if (arg.length() == 0) {
+                isHanging = true;
                 continue;
             }
 
@@ -112,9 +142,14 @@ public class CommandContext {
         for (int nextArg = 0; nextArg < argList.size(); ) {
             // Fetch argument
             String arg = argList.get(nextArg++);
+            suggestionContext = SuggestionContext.hangingValue();
 
             // Not a flag?
             if (arg.charAt(0) != '-' || arg.length() == 1 || !arg.matches("^-[a-zA-Z]+$")) {
+                if (!isHanging) {
+                    suggestionContext = SuggestionContext.lastValue();
+                }
+                
                 originalArgIndices.add(argIndexList.get(nextArg - 1));
                 parsedArgs.add(arg);
                 continue;
@@ -139,16 +174,30 @@ public class CommandContext {
                     }
 
                     if (nextArg >= argList.size()) {
-                        throw new CommandException("No value specified for the '-" + flagName + "' flag.");
+                        if (allowHangingFlag) {
+                            suggestionContext = SuggestionContext.flag(flagName);
+                            break;
+                        } else {
+                            throw new CommandException("No value specified for the '-" + flagName + "' flag.");
+                        }
                     }
 
                     // If it is a value flag, read another argument and add it
                     this.valueFlags.put(flagName, argList.get(nextArg++));
+                    if (!isHanging) {
+                        suggestionContext = SuggestionContext.flag(flagName);
+                    }
                 } else {
                     booleanFlags.add(flagName);
                 }
             }
         }
+        
+        this.suggestionContext = suggestionContext;
+    }
+
+    public SuggestionContext getSuggestionContext() {
+        return suggestionContext;
     }
 
     public String getCommand() {
@@ -172,6 +221,18 @@ public class CommandContext {
         StringBuilder buffer = new StringBuilder(originalArgs[initialIndex]);
         for (int i = initialIndex + 1; i < originalArgs.length; ++i) {
             buffer.append(" ").append(originalArgs[i]);
+        }
+        return buffer.toString();
+    }
+    
+    public String getRemainingString(int start) {
+        return getString(start, parsedArgs.size() - 1);
+    }
+
+    public String getString(int start, int end) {
+        StringBuilder buffer = new StringBuilder(parsedArgs.get(start));
+        for (int i = start + 1; i < end + 1; ++i) {
+            buffer.append(" ").append(parsedArgs.get(i));
         }
         return buffer.toString();
     }
@@ -201,6 +262,18 @@ public class CommandContext {
     public String[] getPaddedSlice(int index, int padding) {
         String[] slice = new String[originalArgs.length - index + padding];
         System.arraycopy(originalArgs, index, slice, padding, originalArgs.length - index);
+        return slice;
+    }
+
+    public String[] getParsedSlice(int index) {
+        String[] slice = new String[parsedArgs.size() - index];
+        System.arraycopy(parsedArgs.toArray(new String[parsedArgs.size()]), index, slice, 0, parsedArgs.size() - index);
+        return slice;
+    }
+
+    public String[] getParsedPaddedSlice(int index, int padding) {
+        String[] slice = new String[parsedArgs.size() - index + padding];
+        System.arraycopy(parsedArgs.toArray(new String[parsedArgs.size()]), index, slice, padding, parsedArgs.size() - index);
         return slice;
     }
 
@@ -257,5 +330,9 @@ public class CommandContext {
 
     public int argsLength() {
         return parsedArgs.size();
+    }
+
+    public CommandLocals getLocals() {
+        return locals;
     }
 }

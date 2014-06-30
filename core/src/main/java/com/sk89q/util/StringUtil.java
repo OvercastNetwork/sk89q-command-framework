@@ -1,20 +1,21 @@
-// $Id$
 /*
- * Copyright (C) 2010 sk89q <http://www.sk89q.com> and contributors
+ * WorldEdit, a Minecraft world manipulation toolkit
+ * Copyright (C) sk89q <http://www.sk89q.com>
+ * Copyright (C) WorldEdit team and contributors
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.sk89q.util;
 
@@ -26,7 +27,11 @@ import java.util.Map;
  * 
  * @author sk89q
  */
-public class StringUtil {
+public final class StringUtil {
+
+    private StringUtil() {
+    }
+
     /**
      * Trim a string if it is longer than a certain length.
      *  
@@ -241,7 +246,7 @@ public class StringUtil {
         int i; // iterates through s
         int j; // iterates through t
 
-        char t_j; // jth character of t
+        char tj; // jth character of t
 
         int cost; // cost
 
@@ -250,11 +255,11 @@ public class StringUtil {
         }
 
         for (j = 1; j <= m; ++j) {
-            t_j = t.charAt(j - 1);
+            tj = t.charAt(j - 1);
             d[0] = j;
 
             for (i = 1; i <= n; ++i) {
-                cost = s.charAt(i - 1) == t_j ? 0 : 1;
+                cost = s.charAt(i - 1) == tj ? 0 : 1;
                 // minimum of cell to the left+1, to the top+1, diagonally left
                 // and up +cost
                 d[i] = Math.min(Math.min(d[i - 1] + 1, p[i] + 1), p[i - 1]
@@ -284,7 +289,7 @@ public class StringUtil {
             return null;
         }
 
-        int minDist = Integer.MAX_VALUE;
+        int minDist = -1;
 
         for (Map.Entry<String, T> entry : lookup.entrySet()) {
             final String key = entry.getKey();
@@ -294,16 +299,13 @@ public class StringUtil {
 
             int dist = getLevenshteinDistance(key, testName);
 
-            if (dist >= minDist) {
+            if ((dist < minDist || minDist == -1) && dist < 2) {
                 minDist = dist;
                 type = entry.getValue();
             }
         }
 
-        if (minDist > 1) {
-            return null;
-        }
-
         return type;
     }
 }
+

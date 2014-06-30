@@ -19,7 +19,32 @@
 
 package com.sk89q.minecraft.util.commands;
 
-public class UnhandledCommandException extends CommandException {
-    private static final long serialVersionUID = 3370887306593968091L;
+import java.util.HashMap;
+import java.util.Map;
+
+public class CommandLocals {
+    
+    private final Map<Object, Object> locals = new HashMap<Object, Object>();
+
+    public boolean containsKey(Object key) {
+        return locals.containsKey(key);
+    }
+
+    public boolean containsValue(Object value) {
+        return locals.containsValue(value);
+    }
+
+    public Object get(Object key) {
+        return locals.get(key);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T get(Class<T> key) {
+        return (T) locals.get(key);
+    }
+
+    public Object put(Object key, Object value) {
+        return locals.put(key, value);
+    }
 
 }
