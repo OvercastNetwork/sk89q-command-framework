@@ -31,6 +31,7 @@ public class CommandContext {
     
     protected final String command;
     protected final List<String> parsedArgs;
+
     protected final List<Integer> originalArgIndices;
     protected final String[] originalArgs;
     protected final Set<Character> booleanFlags = new HashSet<Character>();
@@ -93,7 +94,7 @@ public class CommandContext {
             isHanging = false;
             
             String arg = args[i];
-            if (arg.length() == 0) {
+            if (arg.isEmpty()) {
                 isHanging = true;
                 continue;
             }
@@ -126,7 +127,7 @@ public class CommandContext {
                 }
 
                 // In case there is an empty quoted string
-                if (arg.length() == 0) {
+                if (arg.isEmpty()) {
                     continue;
                 }
                 // else raise exception about hanging quotes?
@@ -145,7 +146,7 @@ public class CommandContext {
             suggestionContext = SuggestionContext.hangingValue();
 
             // Not a flag?
-            if (arg.charAt(0) != '-' || arg.length() == 1 || !arg.matches("^-[a-zA-Z]+$")) {
+            if (arg.charAt(0) != '-' || arg.length() == 1 || !arg.matches("^-[a-zA-Z\\?]+$")) {
                 if (!isHanging) {
                     suggestionContext = SuggestionContext.lastValue();
                 }

@@ -19,13 +19,15 @@
 
 package com.sk89q.minecraft.util.commands;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class CommandException extends Exception {
-    
-    private static final long serialVersionUID = 870638193072101739L;
+
     private List<String> commandStack = new ArrayList<String>();
 
     public CommandException() {
@@ -48,7 +50,16 @@ public class CommandException extends Exception {
         commandStack.add(name);
     }
 
-    public String toStackString(String prefix, String spacedSuffix) {
+    /**
+     * Gets the command that was called, which will include the sub-command
+     * (i.e. "/br sphere").
+     *
+     * @param prefix the command shebang character (such as "/") -- may be empty
+     * @param spacedSuffix a suffix to put at the end (optional) -- may be null
+     * @return the command that was used
+     */
+    public String getCommandUsed(String prefix, @Nullable String spacedSuffix) {
+        checkNotNull(prefix);
         StringBuilder builder = new StringBuilder();
         if (prefix != null) {
             builder.append(prefix);
@@ -66,7 +77,7 @@ public class CommandException extends Exception {
             }
             builder.append(spacedSuffix);
         }
-        return builder.toString();
+        return builder.toString().trim();
     }
 
 }
