@@ -22,12 +22,12 @@
     <dependency>
       <groupId>com.sk89q</groupId>
       <artifactId>command-framework-core</artifactId>
-      <version>0.5-SNAPSHOT</version>
+      <version>0.6-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>bukkit</artifactId>
-      <version>1.4.7-R1.0</version>
+      <version>1.8.7-R0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
