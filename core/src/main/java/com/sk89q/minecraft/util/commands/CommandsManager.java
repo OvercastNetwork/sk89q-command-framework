@@ -535,6 +535,10 @@ public abstract class CommandsManager<T> {
                 throw (CommandException) e.getCause();
             }
 
+            if(e.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) e.getCause();
+            }
+
             throw new WrappedCommandException(e.getCause());
         }
     }
