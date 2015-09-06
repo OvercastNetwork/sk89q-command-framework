@@ -238,20 +238,30 @@ public class CommandContext {
         return buffer.toString();
     }
 
-    public int getInteger(int index) throws NumberFormatException {
-        return Integer.parseInt(parsedArgs.get(index));
+    public int getInteger(int index) throws CommandException {
+        final String text = parsedArgs.get(index);
+        try {
+            return Integer.parseInt(text);
+        } catch(NumberFormatException e) {
+            throw new CommandException("Number expected in place of '" + text + "'");
+        }
     }
 
-    public int getInteger(int index, int def) throws NumberFormatException {
-        return index < parsedArgs.size() ? Integer.parseInt(parsedArgs.get(index)) : def;
+    public int getInteger(int index, int def) throws CommandException {
+        return index < parsedArgs.size() ? getInteger(index) : def;
     }
 
-    public double getDouble(int index) throws NumberFormatException {
-        return Double.parseDouble(parsedArgs.get(index));
+    public double getDouble(int index) throws CommandException {
+        final String text = parsedArgs.get(index);
+        try {
+            return Double.parseDouble(text);
+        } catch(NumberFormatException e) {
+            throw new CommandException("Number expected in place of '" + text + "'");
+        }
     }
 
-    public double getDouble(int index, double def) throws NumberFormatException {
-        return index < parsedArgs.size() ? Double.parseDouble(parsedArgs.get(index)) : def;
+    public double getDouble(int index, double def) throws CommandException {
+        return index < parsedArgs.size() ? getDouble(index) : def;
     }
 
     public String[] getSlice(int index) {
@@ -303,30 +313,30 @@ public class CommandContext {
         return value;
     }
 
-    public int getFlagInteger(char ch) throws NumberFormatException {
-        return Integer.parseInt(valueFlags.get(ch));
-    }
-
-    public int getFlagInteger(char ch, int def) throws NumberFormatException {
-        final String value = valueFlags.get(ch);
-        if (value == null) {
-            return def;
+    public int getFlagInteger(char ch) throws CommandException {
+        final String text = valueFlags.get(ch);
+        try {
+            return Integer.parseInt(text);
+        } catch(NumberFormatException e) {
+            throw new CommandException("Number expected in place of '" + text + "'");
         }
-
-        return Integer.parseInt(value);
     }
 
-    public double getFlagDouble(char ch) throws NumberFormatException {
-        return Double.parseDouble(valueFlags.get(ch));
+    public int getFlagInteger(char ch, int def) throws CommandException {
+        return !valueFlags.containsKey(ch) ? def : getFlagInteger(ch);
     }
 
-    public double getFlagDouble(char ch, double def) throws NumberFormatException {
-        final String value = valueFlags.get(ch);
-        if (value == null) {
-            return def;
+    public double getFlagDouble(char ch) throws CommandException {
+        final String text = valueFlags.get(ch);
+        try {
+            return Double.parseDouble(text);
+        } catch(NumberFormatException e) {
+            throw new CommandException("Number expected in place of '" + text + "'");
         }
+    }
 
-        return Double.parseDouble(value);
+    public double getFlagDouble(char ch, double def) throws CommandException {
+        return !valueFlags.containsKey(ch) ? def : getFlagDouble(ch);
     }
 
     public int argsLength() {
