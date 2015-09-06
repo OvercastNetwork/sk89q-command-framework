@@ -238,29 +238,29 @@ public class CommandContext {
         return buffer.toString();
     }
 
-    public int getInteger(int index) throws CommandException {
+    public int getInteger(int index) throws CommandNumberFormatException {
         final String text = parsedArgs.get(index);
         try {
             return Integer.parseInt(text);
         } catch(NumberFormatException e) {
-            throw new CommandException("Number expected in place of '" + text + "'");
+            throw new CommandNumberFormatException(text);
         }
     }
 
-    public int getInteger(int index, int def) throws CommandException {
+    public int getInteger(int index, int def) throws CommandNumberFormatException {
         return index < parsedArgs.size() ? getInteger(index) : def;
     }
 
-    public double getDouble(int index) throws CommandException {
+    public double getDouble(int index) throws CommandNumberFormatException {
         final String text = parsedArgs.get(index);
         try {
             return Double.parseDouble(text);
         } catch(NumberFormatException e) {
-            throw new CommandException("Number expected in place of '" + text + "'");
+            throw new CommandNumberFormatException(text);
         }
     }
 
-    public double getDouble(int index, double def) throws CommandException {
+    public double getDouble(int index, double def) throws CommandNumberFormatException {
         return index < parsedArgs.size() ? getDouble(index) : def;
     }
 
@@ -313,29 +313,29 @@ public class CommandContext {
         return value;
     }
 
-    public int getFlagInteger(char ch) throws CommandException {
+    public int getFlagInteger(char ch) throws CommandNumberFormatException {
         final String text = valueFlags.get(ch);
         try {
             return Integer.parseInt(text);
         } catch(NumberFormatException e) {
-            throw new CommandException("Number expected in place of '" + text + "'");
+            throw new CommandNumberFormatException(text);
         }
     }
 
-    public int getFlagInteger(char ch, int def) throws CommandException {
+    public int getFlagInteger(char ch, int def) throws CommandNumberFormatException {
         return !valueFlags.containsKey(ch) ? def : getFlagInteger(ch);
     }
 
-    public double getFlagDouble(char ch) throws CommandException {
+    public double getFlagDouble(char ch) throws CommandNumberFormatException {
         final String text = valueFlags.get(ch);
         try {
             return Double.parseDouble(text);
         } catch(NumberFormatException e) {
-            throw new CommandException("Number expected in place of '" + text + "'");
+            throw new CommandNumberFormatException(text);
         }
     }
 
-    public double getFlagDouble(char ch, double def) throws CommandException {
+    public double getFlagDouble(char ch, double def) throws CommandNumberFormatException {
         return !valueFlags.containsKey(ch) ? def : getFlagDouble(ch);
     }
 
