@@ -14,7 +14,7 @@ public class BukkitWrappedCommandSender implements WrappedCommandSender {
 
     @Override
     public String getName() {
-        return this.getName();
+        return this.wrapped.getName();
     }
 
     @Override
