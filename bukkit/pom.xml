@@ -3,11 +3,11 @@
   <parent>
     <groupId>com.sk89q</groupId>
     <artifactId>command-framework-parent</artifactId>
-    <version>0.6-SNAPSHOT</version>
+    <version>1.9-SNAPSHOT</version>
   </parent>
   <artifactId>command-framework-bukkit</artifactId>
   <packaging>jar</packaging>
-  <version>0.6-SNAPSHOT</version>
+  <version>1.9-SNAPSHOT</version>
   <name>Sk89q Command Framework for Bukkit</name>
   <description>Supporting classes for running the command framework on Bukkit servers.</description>
 
@@ -22,12 +22,12 @@
     <dependency>
       <groupId>com.sk89q</groupId>
       <artifactId>command-framework-core</artifactId>
-      <version>0.6-SNAPSHOT</version>
+      <version>1.9-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>bukkit</artifactId>
-      <version>1.8.7-R0.1-SNAPSHOT</version>
+      <version>1.9-R0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
