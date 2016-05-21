@@ -135,20 +135,10 @@ public abstract class CommandsManager<T> {
      */
     public List<Command> registerMethods(Class<?> cls, Method parent) {
         try {
-            if (getInjector() == null) {
-                return registerMethods(cls, parent, null);
-            } else {
-                Object obj = getInjector().getInstance(cls);
-                return registerMethods(cls, parent, obj);
-            }
-        } catch (InvocationTargetException e) {
-            logger.log(Level.SEVERE, "Failed to register commands", e);
-        } catch (IllegalAccessException e) {
-            logger.log(Level.SEVERE, "Failed to register commands", e);
-        } catch (InstantiationException e) {
-            logger.log(Level.SEVERE, "Failed to register commands", e);
+            return registerMethods(cls, parent, null);
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
+            throw new CommandRegistrationException("Failed to register commands", e);
         }
-        return null;
     }
 
     /**
@@ -159,7 +149,7 @@ public abstract class CommandsManager<T> {
      * @param obj the object whose methods will become commands if they are annotated
      * @return a list of commands
      */
-    private List<Command> registerMethods(Class<?> cls, Method parent, Object obj) {
+    private List<Command> registerMethods(Class<?> cls, Method parent, Object obj) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         Map<String, Method> map;
         List<Command> registered = new ArrayList<Command>();
 
@@ -188,9 +178,21 @@ public abstract class CommandsManager<T> {
 
             // We want to be able invoke with an instance
             if (!isStatic) {
-                // Can't register this command if we don't have an instance
-                if (obj == null) {
-                    continue;
+                if(obj == null) {
+                    if(injector != null) {
+                        obj = injector.getInstance(cls);
+                    }
+
+                    if(obj == null) {
+                        String text = "Failed to get an instance of " + cls.getName() +
+                                      " for command method " + method.getDeclaringClass().getName() + "#" + method.getName();
+                        if(injector == null) {
+                            text += " (no Injector is available to create it)";
+                        } else {
+                            text += " (the Injector returned null when asked for one)";
+                        }
+                        throw new CommandRegistrationException(text);
+                    }
                 }
 
                 instances.put(method, obj);
