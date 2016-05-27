@@ -21,38 +21,52 @@ package com.sk89q.bukkit.util;
 
 import com.sk89q.minecraft.util.commands.CommandsManager;
 import com.sk89q.util.StringUtil;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
+import java.util.List;
+import javax.annotation.Nullable;
 
 /**
 * @author zml2008
 */
 public class DynamicPluginCommand extends org.bukkit.command.Command implements PluginIdentifiableCommand {
 
-    protected final CommandExecutor owner;
+    protected final CommandExecutor executor;
+    protected final @Nullable TabCompleter completer;
     protected final Object registeredWith;
     protected final Plugin owningPlugin;
     protected String[] permissions = new String[0];
 
-    public DynamicPluginCommand(String[] aliases, String desc, String usage, CommandExecutor owner, Object registeredWith, Plugin plugin) {
+    public DynamicPluginCommand(String[] aliases, String desc, String usage, CommandExecutor executor, @Nullable TabCompleter completer, Object registeredWith, Plugin plugin) {
         super(aliases[0], desc, usage, Arrays.asList(aliases));
-        this.owner = owner;
+        this.executor = executor;
+        this.completer = completer;
         this.owningPlugin = plugin;
         this.registeredWith = registeredWith;
     }
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        return owner.onCommand(sender, this, label, args);
+        return executor.onCommand(sender, this, label, args);
     }
 
-    public Object getOwner() {
-        return owner;
+    @Override
+    public List<String> tabComplete(CommandSender sender, String alias, String[] args) throws IllegalArgumentException {
+        return completer == null ? super.tabComplete(sender, alias, args)
+                                 : completer.onTabComplete(sender, this, alias, args);
+    }
+
+    public CommandExecutor getExecutor() {
+        return executor;
+    }
+
+    public TabCompleter getCompleter() {
+        return completer;
     }
 
     public Object getRegisteredWith() {

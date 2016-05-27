@@ -19,50 +19,81 @@
 
 package com.sk89q.minecraft.util.commands;
 
+import javax.annotation.Nullable;
+
+/**
+ * Extra information about the context in which tab-completion is happening
+ */
 public class SuggestionContext {
 
-    private static final SuggestionContext FOR_LAST = new SuggestionContext(null, true);
-    private static final SuggestionContext FOR_HANGING = new SuggestionContext(null, false);
-    
-    private final Character flag;
-    private final boolean forLast;
+    private final String context;
+    private final String prefix;
+    private final int index;
+    private final @Nullable Character flag;
 
-    private SuggestionContext(Character flag, boolean forLast) {
+    public SuggestionContext(String context, String prefix, int index, @Nullable Character flag) {
+        this.context = context;
+        this.prefix = prefix;
+        this.index = index;
         this.flag = flag;
-        this.forLast = forLast; 
-    }
-    
-    public boolean forHangingValue() {
-        return flag == null && !forLast;
-    }
-    
-    public boolean forLastValue() {
-        return flag == null && forLast;
     }
 
-    public boolean forFlag() {
+    /**
+     * Return the part of the command line before the text that will be replaced by the completion.
+     * This will be from the start of the first argument to the start of the text returned by
+     * {@link #getPrefix()}, and may include trailing spaces.
+     *
+     * It is not possible for the completion to change this text.
+     */
+    public String getContext() {
+        return context;
+    }
+
+    /**
+     * Return the part of the command line that will be replaced by the completion.
+     * This will be the last span of non-space characters, or an empty string if the
+     * last character is a space.
+     *
+     * Special characters such as quotes and backslash are treated the same as any
+     * other non-space character. It is not possible for completion to replace
+     * anything before this.
+     */
+    public String getPrefix() {
+        return prefix;
+    }
+
+    /**
+     * True if completing an argument (rather than a value flag)
+     */
+    public boolean isArgument() {
+        return flag == null;
+    }
+
+    /**
+     * True if completing the value for a flag.
+     */
+    public boolean isFlag() {
         return flag != null;
     }
 
-    public Character getFlag() {
+    /**
+     * The index of the argument being completed, if {@link #isArgument()} is true, otherwise -1.
+     * @return
+     */
+    public int getIndex() {
+        return index;
+    }
+
+    /**
+     * The flag being completed, if {@link #isFlag()} is true, otherwise null.
+     */
+    public @Nullable Character getFlag() {
         return flag;
     }
     
     @Override
     public String toString() {
-        return forFlag() ? ("-" + getFlag()) : (forHangingValue() ? "hanging" : "last");
+        return isArgument() ? "argument " + getIndex()
+                            : "flag -" + getFlag();
     }
-    
-    public static SuggestionContext flag(Character flag) {
-        return new SuggestionContext(flag, false);
-    }
-    
-    public static SuggestionContext lastValue() {
-        return FOR_LAST;
-    }
-    
-    public static SuggestionContext hangingValue() {
-        return FOR_HANGING;
-    }
-
 }

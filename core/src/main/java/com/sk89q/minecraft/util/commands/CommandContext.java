@@ -26,42 +26,37 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 public class CommandContext {
     
-    protected final String command;
-    protected final List<String> parsedArgs;
-
-    protected final List<Integer> originalArgIndices;
+    // Raw command line words, including the command itself
+    // Split on literal ' ', so any element can be blank except the first one
     protected final String[] originalArgs;
-    protected final Set<Character> booleanFlags = new HashSet<Character>();
-    protected final Map<Character, String> valueFlags = new HashMap<Character, String>();
-    protected final SuggestionContext suggestionContext;
+
+    // Name of the command, i.e. the first element of originaArgs
+    protected final String command;
+
+    // Final arguments, after all parsing and escaping
+    // Does not include the command name, flags, or flag values
+    // Last element can be blank if completing
+    protected final List<String> parsedArgs = new ArrayList<>();
+
+    // Starting index in originalArgs of each respective element of parsedArgs
+    protected final List<Integer> originalArgIndices = new ArrayList<>();
+
+    // Boolean flags present
+    protected final Set<Character> booleanFlags = new HashSet<>();
+
+    // Value flags present, and their values
+    // One flag may have a blank value if its being completed
+    protected final Map<Character, String> valueFlags = new HashMap<>();
+
+    protected final @Nullable SuggestionContext suggestionContext;
     protected final CommandLocals locals;
 
-    public static String[] split(String args) {
-        return args.split(" ", -1);
-    }
-
-    public CommandContext(String args) throws CommandException {
-        this(args.split(" ", -1), null);
-    }
-
-    public CommandContext(String[] args) throws CommandException {
-        this(args, null);
-    }
-
-    public CommandContext(String args, Set<Character> valueFlags) throws CommandException {
-        this(args.split(" ", -1), valueFlags);
-    }
-
-    public CommandContext(String args, Set<Character> valueFlags, boolean allowHangingFlag) 
-            throws CommandException {
-        this(args.split(" ", -1), valueFlags, allowHangingFlag, new CommandLocals());
-    }
-
-    public CommandContext(String[] args, Set<Character> valueFlags) throws CommandException {
-        this(args, valueFlags, false, null);
+    public CommandContext(String[] args, Set<Character> valueFlags, boolean completing) throws CommandException {
+        this(args, valueFlags, completing, null);
     }
 
     /**
@@ -70,134 +65,130 @@ public class CommandContext {
      * <p>Empty arguments are removed from the list of arguments.</p>
      * 
      * @param args an array with arguments
-     * @param valueFlags a set containing all value flags (pass null to disable value flag parsing)
-     * @param allowHangingFlag true if hanging flags are allowed
+     * @param valueFlagNames a set containing all value flags (pass null to disable value flag parsing)
+     * @param completing true if completing a partial command, false if executing the command
      * @param locals the locals, null to create empty one
      * @throws CommandException thrown on a parsing error
      */
-    public CommandContext(String[] args, Set<Character> valueFlags, 
-            boolean allowHangingFlag, CommandLocals locals) throws CommandException {
-        if (valueFlags == null) {
-            valueFlags = Collections.emptySet();
+    public CommandContext(String[] args, @Nullable Set<Character> valueFlagNames, boolean completing, @Nullable CommandLocals locals) throws CommandException {
+        if (valueFlagNames == null) {
+            valueFlagNames = Collections.emptySet();
         }
 
-        originalArgs = args;
-        command = args[0];
+        this.originalArgs = args;
+        this.command = args[0];
         this.locals = locals != null ? locals : new CommandLocals();
-        boolean isHanging = false;
-        SuggestionContext suggestionContext = SuggestionContext.hangingValue();
+        if(args.length < 2) completing = false;
 
-        // Eliminate empty args and combine multiword args first
-        List<Integer> argIndexList = new ArrayList<Integer>(args.length);
-        List<String> argList = new ArrayList<String>(args.length);
-        for (int i = 1; i < args.length; ++i) {
-            isHanging = false;
-            
-            String arg = args[i];
-            if (arg.isEmpty()) {
-                isHanging = true;
-                continue;
-            }
+        boolean acceptingFlags = true;
+        Character valueFlag = null;
+        Character completingFlag = null;
+        int completingIndex = -1;
 
-            argIndexList.add(i);
+        for(int argIndex = 1; argIndex < args.length; ++argIndex) {
+            String arg = args[argIndex];
+            final int startIndex = argIndex;
 
-            switch (arg.charAt(0)) {
-            case '\'':
-            case '"':
-                final StringBuilder build = new StringBuilder();
-                final char quotedChar = arg.charAt(0);
+            if(arg.isEmpty()) {
+                // If arg is empty, and it's not the last arg being completed, skip it
+                if(!completing || argIndex != args.length - 1) continue;
+            } else {
+                final char c = arg.charAt(0);
+                if(c == '\\' || c == '"') {
+                    // Start of quoted argument, consume unparsed args until
+                    // closing quote, and append them to the parsed arg.
+                    boolean first = true;
+                    for(;argIndex < args.length; ++argIndex) {
+                        final String part;
+                        if(first) {
+                            // Remove leading quote from first part
+                            first = false;
+                            part = args[argIndex].substring(1);
+                        } else {
+                            // Insert space before non-first parts
+                            arg += ' ';
+                            part = args[argIndex];
+                        }
 
-                int endIndex;
-                for (endIndex = i; endIndex < args.length; ++endIndex) {
-                    final String arg2 = args[endIndex];
-                    if (arg2.charAt(arg2.length() - 1) == quotedChar && arg2.length() > 1) {
-                        if (endIndex != i) build.append(' ');
-                        build.append(arg2.substring(endIndex == i ? 1 : 0, arg2.length() - 1));
-                        break;
-                    } else if (endIndex == i) {
-                        build.append(arg2.substring(1));
-                    } else {
-                        build.append(' ').append(arg2);
-                    }
-                }
-
-                if (endIndex < args.length) {
-                    arg = build.toString();
-                    i = endIndex;
-                }
-
-                // In case there is an empty quoted string
-                if (arg.isEmpty()) {
-                    continue;
-                }
-                // else raise exception about hanging quotes?
-            }
-            argList.add(arg);
-        }
-
-        // Then flags
-
-        this.originalArgIndices = new ArrayList<Integer>(argIndexList.size());
-        this.parsedArgs = new ArrayList<String>(argList.size());
-
-        for (int nextArg = 0; nextArg < argList.size(); ) {
-            // Fetch argument
-            String arg = argList.get(nextArg++);
-            suggestionContext = SuggestionContext.hangingValue();
-
-            // Not a flag?
-            if (arg.charAt(0) != '-' || arg.length() == 1 || !arg.matches("^-[a-zA-Z\\?]+$")) {
-                if (!isHanging) {
-                    suggestionContext = SuggestionContext.lastValue();
-                }
-                
-                originalArgIndices.add(argIndexList.get(nextArg - 1));
-                parsedArgs.add(arg);
-                continue;
-            }
-
-            // Handle flag parsing terminator --
-            if (arg.equals("--")) {
-                while (nextArg < argList.size()) {
-                    originalArgIndices.add(argIndexList.get(nextArg));
-                    parsedArgs.add(argList.get(nextArg++));
-                }
-                break;
-            }
-
-            // Go through the flag characters
-            for (int i = 1; i < arg.length(); ++i) {
-                char flagName = arg.charAt(i);
-
-                if (valueFlags.contains(flagName)) {
-                    if (this.valueFlags.containsKey(flagName)) {
-                        throw new CommandException("Value flag '" + flagName + "' already given");
-                    }
-
-                    if (nextArg >= argList.size()) {
-                        if (allowHangingFlag) {
-                            suggestionContext = SuggestionContext.flag(flagName);
+                        if(!part.isEmpty() && part.charAt(part.length() - 1) == c) {
+                            // If part ends in a quote, append it without the quote, and terminate
+                            arg += part.substring(0, part.length() - 1);
                             break;
                         } else {
-                            throw new CommandException("No value specified for the '-" + flagName + "' flag.");
+                            // Otherwise, just append the part
+                            arg += part;
                         }
                     }
-
-                    // If it is a value flag, read another argument and add it
-                    this.valueFlags.put(flagName, argList.get(nextArg++));
-                    if (!isHanging) {
-                        suggestionContext = SuggestionContext.flag(flagName);
+                } else if(valueFlag == null) {
+                    // If not expecting a flag value, parse flags
+                    if("--".equals(arg)) {
+                        // Flag terminator '--', don't try to parse flags after this
+                        acceptingFlags = false;
+                        arg = null;
+                    } else if(acceptingFlags && arg.matches("^-[a-zA-Z?]+$")) {
+                        // Flag set, parse any number of boolean flags, and up to one value flag
+                        for(int iFlag = 1; iFlag < arg.length(); iFlag++) {
+                            final char flagName = arg.charAt(iFlag);
+                            if(valueFlagNames.contains(flagName)) {
+                                if(valueFlags.containsKey(flagName)) {
+                                    throw new CommandException("Value flag '" + flagName + "' already given");
+                                }
+                                if(valueFlag == null) {
+                                    valueFlag = flagName;
+                                } else {
+                                    throw new CommandException("No value specified for the '-" + flagName + "' flag.");
+                                }
+                            } else {
+                                booleanFlags.add(flagName);
+                            }
+                        }
+                        arg = null;
                     }
+                }
+            }
+
+            if(arg != null) {
+                if(valueFlag == null) {
+                    // Append the parsed argument and its source index
+                    if(completing) {
+                        completingIndex = parsedArgs.size();
+                        completingFlag = null;
+                    }
+                    parsedArgs.add(arg);
+                    originalArgIndices.add(startIndex);
                 } else {
-                    booleanFlags.add(flagName);
+                    // Assign the parsed arg to the preceding value flag
+                    if(completing) {
+                        completingIndex = -1;
+                        completingFlag = valueFlag;
+                    }
+                    valueFlags.put(valueFlag, arg);
+                    valueFlag = null;
                 }
             }
         }
-        
-        this.suggestionContext = suggestionContext;
+
+        if(valueFlag != null) {
+            // Last arg cannot be a value flag
+            throw new CommandException("No value specified for the '-" + valueFlag + "' flag.");
+        }
+
+        if(completing) {
+            String context = "";
+            for(int i = 1; i < args.length - 1; i++) {
+                context += args[i] + ' ';
+            }
+            suggestionContext = new SuggestionContext(context, args[args.length - 1], completingIndex, completingFlag);
+        } else {
+            suggestionContext = null;
+        }
     }
 
-    public SuggestionContext getSuggestionContext() {
+    /**
+     * Return the context for which command completion is being requested,
+     * or null if the command is not being completed.
+     */
+    public @Nullable SuggestionContext getSuggestionContext() {
         return suggestionContext;
     }
 

@@ -24,12 +24,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 import com.sk89q.util.ReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.SimpleCommandMap;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -43,15 +45,21 @@ public class CommandRegistration {
 
 	protected final Plugin plugin;
     protected final CommandExecutor executor;
+    protected final TabCompleter completer;
 	private CommandMap fallbackCommands;
 
     public CommandRegistration(Plugin plugin) {
-        this(plugin, plugin);
+        this(plugin, plugin, plugin);
     }
 
     public CommandRegistration(Plugin plugin, CommandExecutor executor) {
+        this(plugin, executor, null);
+    }
+
+    public CommandRegistration(Plugin plugin, CommandExecutor executor, @Nullable TabCompleter completer) {
         this.plugin = plugin;
         this.executor = executor;
+        this.completer = completer;
     }
 
     public boolean register(List<CommandInfo> registered) {
@@ -61,7 +69,12 @@ public class CommandRegistration {
         }
         for (CommandInfo command : registered) {
             DynamicPluginCommand cmd = new DynamicPluginCommand(command.getAliases(),
-                    command.getDesc(), "/" + command.getAliases()[0] + " " + command.getUsage(), executor, command.getRegisteredWith(), plugin);
+                                                                command.getDesc(),
+                                                                "/" + command.getAliases()[0] + " " + command.getUsage(),
+                                                                executor,
+                                                                command.hasCompletion() ? completer : null,
+                                                                command.getRegisteredWith(),
+                                                                plugin);
             cmd.setPermissions(command.getPermissions());
             commandMap.register(plugin.getDescription().getName(), cmd);
         }
@@ -93,7 +106,7 @@ public class CommandRegistration {
         }
         for (Iterator<org.bukkit.command.Command> i = knownCommands.values().iterator(); i.hasNext();) {
             org.bukkit.command.Command cmd = i.next();
-            if (cmd instanceof DynamicPluginCommand && ((DynamicPluginCommand) cmd).getOwner().equals(executor)) {
+            if (cmd instanceof DynamicPluginCommand && ((DynamicPluginCommand) cmd).getExecutor().equals(executor)) {
                 i.remove();
                 for (String alias : cmd.getAliases()) {
                     org.bukkit.command.Command aliasCmd = knownCommands.get(alias);
