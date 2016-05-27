@@ -1,8 +1,12 @@
 # Maven
 target/
+dependency-reduced-pom.xml
 
 # Java
 *.class
 *.jar
 *.war
 *.ear
+
+# IntelliJ
+*.iml
