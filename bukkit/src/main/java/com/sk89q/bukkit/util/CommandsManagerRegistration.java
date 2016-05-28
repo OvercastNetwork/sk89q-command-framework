@@ -60,18 +60,14 @@ public class CommandsManagerRegistration extends CommandRegistration {
         List<CommandInfo> toRegister = new ArrayList<CommandInfo>();
         for (Command command : registered) {
             String[] permissions = null;
-            boolean completion = false;
             Method cmdMethod = commands.getMethods().get(null).get(command.aliases()[0]);
             if(cmdMethod != null) {
                 if(cmdMethod.isAnnotationPresent(CommandPermissions.class)) {
                     permissions = cmdMethod.getAnnotation(CommandPermissions.class).value();
                 }
-                if(List.class.isAssignableFrom(cmdMethod.getReturnType())) {
-                    completion = true;
-                }
             }
 
-            toRegister.add(new CommandInfo(command.usage(), command.desc(), command.aliases(), commands, permissions, completion));
+            toRegister.add(new CommandInfo(command.usage(), command.desc(), command.aliases(), commands, permissions));
         }
 
         return register(toRegister);

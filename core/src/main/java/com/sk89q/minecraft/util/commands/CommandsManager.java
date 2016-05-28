@@ -492,7 +492,7 @@ public abstract class CommandsManager<T> {
             String[] newArgs = new String[args.length - level];
             System.arraycopy(args, level, newArgs, 0, args.length - level);
 
-            final Set<Character> valueFlags = new HashSet<>(), booleanFlags = new HashSet<>();
+            final Set<Character> valueFlags = new HashSet<>();
 
             char[] flags = cmd.flags().toCharArray();
             Set<Character> newFlags = new HashSet<Character>();

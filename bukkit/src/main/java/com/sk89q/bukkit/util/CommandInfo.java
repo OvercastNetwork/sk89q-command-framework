@@ -26,15 +26,13 @@ public class CommandInfo {
     private final Object registeredWith;
     private final String usage, desc;
     private final String[] permissions;
-    private final boolean completion;
 
-    public CommandInfo(String usage, String desc, String[] aliases, Object registeredWith, String[] permissions, boolean completion) {
+    public CommandInfo(String usage, String desc, String[] aliases, Object registeredWith, String[] permissions) {
         this.usage = usage;
         this.desc = desc;
         this.aliases = aliases;
         this.permissions = permissions;
         this.registeredWith = registeredWith;
-        this.completion = completion;
     }
 
     public String[] getAliases() {
@@ -59,9 +57,5 @@ public class CommandInfo {
 
     public Object getRegisteredWith() {
         return registeredWith;
-    }
-
-    public boolean hasCompletion() {
-        return completion;
     }
 }

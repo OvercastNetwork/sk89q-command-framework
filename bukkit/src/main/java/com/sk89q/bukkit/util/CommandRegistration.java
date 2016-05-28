@@ -72,7 +72,7 @@ public class CommandRegistration {
                                                                 command.getDesc(),
                                                                 "/" + command.getAliases()[0] + " " + command.getUsage(),
                                                                 executor,
-                                                                command.hasCompletion() ? completer : null,
+                                                                completer,
                                                                 command.getRegisteredWith(),
                                                                 plugin);
             cmd.setPermissions(command.getPermissions());
