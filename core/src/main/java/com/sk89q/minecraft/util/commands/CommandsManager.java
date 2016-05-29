@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Manager for handling commands. This allows you to easily process commands,
@@ -411,10 +412,15 @@ public abstract class CommandsManager<T> {
         executeMethod(false, cmd, args, player, methodArgs);
     }
 
-    public List<String> complete(String cmd, String[] args, T player, Object... methodArgs) {
+    /**
+     * Attempt to complete a command.
+     *
+     * If null is returned, the server's default completion should be used.
+     * Any non-null return should be used as the completion results, even if empty.
+     */
+    public @Nullable List<String> complete(String cmd, String[] args, T player, Object... methodArgs) {
         try {
-            final List<String> suggestions = executeMethod(true, cmd, args, player, methodArgs);
-            return suggestions != null ? suggestions : Collections.<String>emptyList();
+            return executeMethod(true, cmd, args, player, methodArgs);
         } catch(CommandException e) {
             return Collections.emptyList();
         }
@@ -439,14 +445,35 @@ public abstract class CommandsManager<T> {
      * @param player the player
      * @param methodArgs the array of method arguments
      * @param level the depth of the command
+     *
+     * @return A list of completions, or null to use the server's default completion (player names).
+     *         Returning an empty list will prevent any completion from happening.
+     *
      * @throws CommandException thrown on a command error
      */
+
     private List<String> executeMethod(Method parent, boolean completing, String[] args, T player, Object[] methodArgs, int level) throws CommandException {
-        String cmdName = args[level];
+        final String cmdName = args[level];
+        final String cmdNameLower = cmdName.toLowerCase();
+        final int argsCount = args.length - 1 - level;
+        final Map<String, Method> map = commands.get(parent);
 
-        Map<String, Method> map = commands.get(parent);
-        Method method = map.get(cmdName.toLowerCase());
+        if(completing && argsCount == 0) {
+            // Completing with no args means the command itself is being completed.
+            // Gather all matching commands, that the player has permission to run,
+            // and return them as completion options. If a full command is being
+            // completed, it will be returned alone, which will just advance the cursor.
+            final List<String> children = new ArrayList<>();
+            for(Map.Entry<String, Method> entry : map.entrySet()) {
+                final String child = entry.getKey();
+                if(child.toLowerCase().startsWith(cmdNameLower) && hasPermission(entry.getValue(), player)) {
+                    children.add(child);
+                }
+            }
+            return children;
+        }
 
+        final Method method = map.get(cmdNameLower);
         if (method == null) {
             if (parent == null) { // Root
                 throw new UnhandledCommandException();
@@ -457,11 +484,8 @@ public abstract class CommandsManager<T> {
         }
 
         if(!hasPermission(method, player)) {
-            if(completing) return null;
             throw new CommandPermissionsException();
         }
-
-        int argsCount = args.length - 1 - level;
 
         // checks if we need to execute the body of the nested command method (false)
         // or display the help what commands are available (true)
@@ -471,10 +495,9 @@ public abstract class CommandsManager<T> {
         //  - /cmd - @NestedCommand(executeBody = true) will go into the else loop and execute code in that method
         //  - /cmd <arg1> <arg2> - @NestedCommand(executeBody = true) will always go to the nested command class
         //  - /cmd <arg1> - @NestedCommand(executeBody = false) will always go to the nested command class not matter the args
-        boolean executeNested = method.isAnnotationPresent(NestedCommand.class)
-                && (argsCount > 0 || !method.getAnnotation(NestedCommand.class).executeBody());
+        final NestedCommand nestedAnnot = method.getAnnotation(NestedCommand.class);
 
-        if (executeNested) {
+        if (nestedAnnot != null && (argsCount > 0 || nestedAnnot.executeBody())) {
             if (argsCount == 0) {
                 throw new MissingNestedCommandException("Sub-command required.",
                                                         getNestedUsage(args, level, method, player));
@@ -487,6 +510,8 @@ public abstract class CommandsManager<T> {
         } else {
             Command cmd = method.getAnnotation(Command.class);
 
+            // If the command method doesn't do completions, return null to indicate that
+            // the default completion (player name) should be used.
             if(completing && !List.class.isAssignableFrom(method.getReturnType())) return null;
 
             String[] newArgs = new String[args.length - level];
@@ -528,7 +553,11 @@ public abstract class CommandsManager<T> {
 
             Object instance = instances.get(method);
 
-            return invokeMethod(parent, args, player, method, instance, methodArgs, argsCount);
+            // If we get here while completing, it means the method's return type is a List<String>,
+            // and we never want to use the default completion. So if it returns null, convert it to
+            // an empty list.
+            final List<String> completions = invokeMethod(parent, args, player, method, instance, methodArgs, argsCount);
+            return completions != null ? completions : Collections.<String>emptyList();
         }
     }
 

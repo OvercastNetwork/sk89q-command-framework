@@ -57,8 +57,14 @@ public class DynamicPluginCommand extends org.bukkit.command.Command implements 
 
     @Override
     public List<String> tabComplete(CommandSender sender, String alias, String[] args) throws IllegalArgumentException {
-        return completer == null ? super.tabComplete(sender, alias, args)
-                                 : completer.onTabComplete(sender, this, alias, args);
+        if(completer != null) {
+            final List<String> completions = completer.onTabComplete(sender, this, alias, args);
+            if(completions != null) {
+                return completions;
+            }
+        }
+
+        return super.tabComplete(sender, alias, args);
     }
 
     public CommandExecutor getExecutor() {
