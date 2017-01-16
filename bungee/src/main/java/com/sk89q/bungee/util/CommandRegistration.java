@@ -1,6 +1,8 @@
 package com.sk89q.bungee.util;
 
 import java.util.List;
+import javax.annotation.Nullable;
+import javax.inject.Provider;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -18,7 +20,11 @@ public class CommandRegistration {
     }
 
     public boolean register(Class<?> clazz) {
-        return this.registerAll(this.commands.registerAndReturn(clazz));
+        return register(clazz, null);
+    }
+
+    public <T> boolean register(Class<T> clazz, @Nullable Provider<? extends T> provider) {
+        return this.registerAll(this.commands.registerMethods(clazz, null, provider));
     }
 
     public boolean registerAll(List<Command> registered) {

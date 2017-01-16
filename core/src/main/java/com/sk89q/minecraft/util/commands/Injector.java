@@ -20,11 +20,25 @@
 package com.sk89q.minecraft.util.commands;
 
 import java.lang.reflect.InvocationTargetException;
+import javax.annotation.Nullable;
+import javax.inject.Provider;
 
 /**
  * Constructs new instances.
  */
 public interface Injector {
+
+    /**
+     * Return a {@link Provider} for the given command class. The framework will
+     * call this at registration time, and use the provider to get a {@link T}
+     * instance every time a command is executed.
+     *
+     * If null is returned, then {@link #getInstance(Class)} will be called at
+     * registration time to get the instance, and it will be reused forever.
+     */
+    default @Nullable <T> Provider<? extends T> getProviderOrNull(Class<T> cls) {
+        return null;
+    }
 
     /**
      * Constructs a new instance of the given class.

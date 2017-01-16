@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import javax.inject.Provider;
 
 /**
  * Manager for handling commands. This allows you to easily process commands,
@@ -77,9 +78,10 @@ public abstract class CommandsManager<T> {
     protected Map<Method, Map<String, Method>> commands = new HashMap<Method, Map<String, Method>>();
 
     /**
-     * Used to store the instances associated with a method.
+     * Used to store the providers associated with a method.
      */
-    protected Map<Method, Object> instances = new HashMap<Method, Object>();
+    protected Map<Class, Object> instances = new HashMap<>();
+    protected Map<Method, Provider> providers = new HashMap<>();
 
     /**
      * Mapping of commands (not including aliases) with a description. This
@@ -136,8 +138,12 @@ public abstract class CommandsManager<T> {
      * @return Commands Registered
      */
     public List<Command> registerMethods(Class<?> cls, Method parent) {
+        return registerMethods(cls, parent, null);
+    }
+
+    public <C> List<Command> registerMethods(Class<C> cls, @Nullable Method parent, @Nullable Provider<? extends C> provider) {
         try {
-            return registerMethods(cls, parent, null);
+            return registerMethods0(cls, parent, provider);
         } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
             throw new CommandRegistrationException("Failed to register commands in class " + cls.getName(), e);
         }
@@ -148,10 +154,10 @@ public abstract class CommandsManager<T> {
      *
      * @param cls the class to register
      * @param parent the parent method
-     * @param obj the object whose methods will become commands if they are annotated
+     * @param provider provides instances of the command method, or null to use the {@link Injector}
      * @return a list of commands
      */
-    private List<Command> registerMethods(Class<?> cls, Method parent, Object obj) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    private <C> List<Command> registerMethods0(Class<C> cls, Method parent, @Nullable Provider<? extends C> provider) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         Map<String, Method> map;
         List<Command> registered = new ArrayList<Command>();
 
@@ -186,24 +192,35 @@ public abstract class CommandsManager<T> {
 
             // We want to be able invoke with an instance
             if (!isStatic) {
-                if(obj == null) {
-                    if(injector != null) {
-                        obj = injector.getInstance(cls);
-                    }
-
-                    if(obj == null) {
-                        String text = "Failed to get an instance of " + cls.getName() +
-                                      " for command method " + method.getDeclaringClass().getName() + "#" + method.getName();
-                        if(injector == null) {
-                            text += " (no Injector is available to create it)";
-                        } else {
-                            text += " (the Injector returned null when asked for one)";
+                if(provider == null && injector != null) {
+                    // If we weren't given a Provider, try to get one from the Injector
+                    provider = injector.getProviderOrNull(cls);
+                    if(provider == null) {
+                        // If we can't get a provider, check if we have already instantiated the class
+                        C instance = (C) instances.get(cls);
+                        if(instance == null) {
+                            // If we haven't, do that now and save it
+                            instance = (C) injector.getInstance(cls);
+                            instances.put(cls, instance);
                         }
-                        throw new CommandRegistrationException(text);
+                        // Generate a provider that just returns the saved instance
+                        final C finalInstance = instance;
+                        provider = () -> finalInstance;
                     }
                 }
 
-                instances.put(method, obj);
+                if(provider != null) {
+                    providers.put(method, provider);
+                } else {
+                    String text = "Failed to get an instance/provider of " + cls.getName() +
+                                  " for command method " + method.getDeclaringClass().getName() + "#" + method.getName();
+                    if(injector == null) {
+                        text += " (no Injector is available to create it)";
+                    } else {
+                        text += " (the Injector returned null when asked for one)";
+                    }
+                    throw new CommandRegistrationException(text);
+                }
             }
 
             // Build a list of commands and their usage details, at least for
@@ -253,7 +270,7 @@ public abstract class CommandsManager<T> {
         }
 
         if (cls.getSuperclass() != null) {
-            registerMethods(cls.getSuperclass(), parent, obj);
+            registerMethods0(cls.getSuperclass(), parent, provider);
         }
 
         return registered;
@@ -551,7 +568,8 @@ public abstract class CommandsManager<T> {
 
             methodArgs[0] = context;
 
-            Object instance = instances.get(method);
+            Provider provider = providers.get(method);
+            Object instance = provider == null ? null : provider.get();
 
             // If we get here while completing, it means the method's return type is a List<String>,
             // and we never want to use the default completion. So if it returns null, convert it to

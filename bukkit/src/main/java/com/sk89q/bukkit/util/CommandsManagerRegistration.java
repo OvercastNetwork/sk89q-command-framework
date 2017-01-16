@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import javax.inject.Provider;
 
 /**
  * @author zml2008
@@ -53,7 +54,11 @@ public class CommandsManagerRegistration extends CommandRegistration {
     }
 
     public boolean register(Class<?> clazz) {
-        return registerAll(commands.registerAndReturn(clazz));
+        return register(clazz, null);
+    }
+
+    public <T> boolean register(Class<T> clazz, @Nullable Provider<? extends T> provider) {
+        return registerAll(commands.registerMethods(clazz, null, provider));
     }
 
     public boolean registerAll(List<Command> registered) {
