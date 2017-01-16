@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.inject.Provider;
 
@@ -415,6 +416,12 @@ public abstract class CommandsManager<T> {
         return command.toString();
     }
 
+    private static boolean supportsCompletion(Method method) {
+        return List.class.isAssignableFrom(method.getReturnType()) ||
+               Stream.of(method.getExceptionTypes())
+                     .anyMatch(SuggestException.class::isAssignableFrom);
+    }
+
     /**
      * Attempt to execute a command. This version takes a separate command
      * name (for the root command) and then a list of following arguments.
@@ -529,7 +536,7 @@ public abstract class CommandsManager<T> {
 
             // If the command method doesn't do completions, return null to indicate that
             // the default completion (player name) should be used.
-            if(completing && !List.class.isAssignableFrom(method.getReturnType())) return null;
+            if(completing && !supportsCompletion(method)) return null;
 
             String[] newArgs = new String[args.length - level];
             System.arraycopy(args, level, newArgs, 0, args.length - level);
@@ -571,30 +578,29 @@ public abstract class CommandsManager<T> {
             Provider provider = providers.get(method);
             Object instance = provider == null ? null : provider.get();
 
-            // If we get here while completing, it means the method's return type is a List<String>,
-            // and we never want to use the default completion. So if it returns null, convert it to
-            // an empty list.
-            final List<String> completions = invokeMethod(parent, args, player, method, instance, methodArgs, argsCount);
-            return completions != null ? completions : Collections.<String>emptyList();
-        }
-    }
-
-    public List<String> invokeMethod(Method parent, String[] args, T player, Method method, Object instance, Object[] methodArgs, int level) throws CommandException {
-        try {
-            return (List<String>) method.invoke(instance, methodArgs);
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            logger.log(Level.SEVERE, "Failed to execute command", e);
-            return null;
-        } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof CommandException) {
-                throw (CommandException) e.getCause();
+            try {
+                // If we get here while completing, it means the method's return type is a List<String>,
+                // and we never want to use the default completion. So if it returns null, convert it to
+                // an empty list.
+                List<String> completions = (List<String>) method.invoke(instance, methodArgs);
+                return completions != null ? completions : Collections.emptyList();
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                logger.log(Level.SEVERE, "Failed to execute command", e);
+                return Collections.emptyList();
+            } catch (InvocationTargetException e) {
+                if (e.getCause() instanceof SuggestException && context.isSuggesting()) {
+                    return ((SuggestException) e.getCause()).suggestions();
+                } else if (e.getCause() instanceof CommandException) {
+                    if(e.getCause() instanceof CommandUsageException) {
+                        ((CommandUsageException) e.getCause()).offerUsage(getUsage(args, argsCount, method.getAnnotation(Command.class)));
+                    }
+                    throw (CommandException) e.getCause();
+                } else if (e.getCause() instanceof RuntimeException) {
+                    throw (RuntimeException) e.getCause();
+                } else {
+                    throw new WrappedCommandException(e.getCause());
+                }
             }
-
-            if(e.getCause() instanceof RuntimeException) {
-                throw (RuntimeException) e.getCause();
-            }
-
-            throw new WrappedCommandException(e.getCause());
         }
     }
 

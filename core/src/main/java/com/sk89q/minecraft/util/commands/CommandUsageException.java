@@ -19,16 +19,28 @@
 
 package com.sk89q.minecraft.util.commands;
 
+import javax.annotation.Nullable;
+
 public class CommandUsageException extends CommandException {
 
-    protected String usage;
+    protected @Nullable String usage;
 
-    public CommandUsageException(String message, String usage) {
+    public CommandUsageException(String message) {
+        this(message, null);
+    }
+
+    public CommandUsageException(String message, @Nullable String usage) {
         super(message);
         this.usage = usage;
     }
 
     public String getUsage() {
-        return usage;
+        return usage != null ? usage : "";
+    }
+
+    public void offerUsage(String usage) {
+        if(this.usage == null) {
+            this.usage = usage;
+        }
     }
 }

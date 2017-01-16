@@ -19,7 +19,10 @@
 
 package com.sk89q.minecraft.util.commands;
 
+import java.util.List;
 import javax.annotation.Nullable;
+
+import com.sk89q.util.StringUtil;
 
 /**
  * Extra information about the context in which tab-completion is happening
@@ -90,7 +93,58 @@ public class SuggestionContext {
     public @Nullable Character getFlag() {
         return flag;
     }
-    
+
+    /**
+     * Is the given argument being completed?
+     */
+    public boolean isArgument(int index) {
+        return isArgument() && getIndex() == index;
+    }
+
+    /**
+     * Is the given flag being completed?
+     */
+    public boolean isFlag(char flag) {
+        return isFlag() && getFlag() == flag;
+    }
+
+    /**
+     * Return the sorted subset of the given choices that are valid completions,
+     * i.e. that start with {@link #getPrefix()}.
+     */
+    public List<String> complete(Iterable<String> choices) {
+        return StringUtil.complete(getPrefix(), choices);
+    }
+
+    /**
+     * Suggest completions based on the given choices, by throwing a {@link SuggestException}.
+     *
+     * Only valid choices are used, and they are sorted alphabetically.
+     */
+    public void suggest(Iterable<String> choices) throws SuggestException {
+        throw new SuggestException(complete(choices));
+    }
+
+    /**
+     * If the given argument is being completed, generate suggestions from the given choices,
+     * by throwing a {@link SuggestException}.
+     */
+    public void suggestArgument(int index, Iterable<String> choices) throws SuggestException {
+        if(isArgument(index)) {
+            suggest(choices);
+        }
+    }
+
+    /**
+     * If the given flag is being completed, generate suggestions from the given choices,
+     * by throwing a {@link SuggestException}.
+     */
+    public void suggestFlag(char flag, Iterable<String> choices) throws SuggestException {
+        if(isFlag(flag)) {
+            suggest(choices);
+        }
+    }
+
     @Override
     public String toString() {
         return isArgument() ? "argument " + getIndex()

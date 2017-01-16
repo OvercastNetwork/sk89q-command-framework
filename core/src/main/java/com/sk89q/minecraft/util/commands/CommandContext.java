@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -192,8 +193,80 @@ public class CommandContext {
         return suggestionContext;
     }
 
+    /**
+     * Is the command being executed, rather than completed?
+     */
+    public boolean isExecuting() {
+        return getSuggestionContext() == null;
+    }
+
+    /**
+     * Is the command being completed, rather than executed?
+     */
+    public boolean isSuggesting() {
+        return getSuggestionContext() != null;
+    }
+
+    /**
+     * Is the given argument being completed?
+     */
+    public boolean isSuggestingArgument(int index) {
+        return isSuggesting() && getSuggestionContext().isArgument(index);
+    }
+
+    /**
+     * Is the given flag being completed?
+     */
+    public boolean isSuggestingFlag(char flag) {
+        return isSuggesting() && getSuggestionContext().isFlag(flag);
+    }
+
+    /**
+     * If the given argument is being completed, generate suggestions based on the given choices.
+     */
+    public void suggestArgument(int index, Iterable<String> choices) throws SuggestException {
+        if(isSuggesting() && getSuggestionContext().isArgument()) {
+            getSuggestionContext().suggestArgument(index, choices);
+        }
+    }
+
+    /**
+     * If the given flag is being completed, generate suggestions based on the given choices.
+     */
+    public void suggestFlag(char flag, Iterable<String> choices) throws SuggestException {
+        if(isSuggesting()) {
+            getSuggestionContext().suggestFlag(flag, choices);
+        }
+    }
+
+    /**
+     * If the command is being completed from anywhere at or after the given argument index,
+     * generate suggestions for the entire command from that index, based on the given choices.
+     */
+    public void suggestJoinedArguments(int start, Iterable<String> choices) throws SuggestException {
+        final SuggestionContext ctx = getSuggestionContext();
+        if(ctx != null && ctx.isArgument()) {
+            if(start == ctx.getIndex()) {
+                ctx.suggestArgument(start, choices);
+            } else if(start < ctx.getIndex()) {
+                final String prefix = String.join(" ", parsedArgs.subList(start, ctx.getIndex())).toLowerCase() + " ";
+                final List<String> filtered = new ArrayList<>();
+                for(String choice : choices) {
+                    if(choice.toLowerCase().startsWith(prefix)) {
+                        filtered.add(choice.substring(prefix.length()));
+                    }
+                }
+                ctx.suggestArgument(ctx.getIndex(), filtered);
+            }
+        }
+    }
+
     public String getCommand() {
         return command;
+    }
+
+    public String[] getOriginalArgs() {
+        return originalArgs;
     }
 
     public boolean matches(String command) {
@@ -204,8 +277,44 @@ public class CommandContext {
         return parsedArgs.get(index);
     }
 
+    /**
+     * Return the argument at the given index as a String, if it is present.
+     */
+    public Optional<String> tryString(int index) {
+        return index < parsedArgs.size() ? Optional.of(parsedArgs.get(index))
+                                         : Optional.empty();
+    }
+
     public String getString(int index, String def) {
         return index < parsedArgs.size() ? parsedArgs.get(index) : def;
+    }
+
+    /**
+     * Return the argument at the given index as a String.
+     * @throws CommandException if the argument is missing
+     */
+    public String string(int index) throws CommandException {
+        if(index >= parsedArgs.size()) {
+            throw new CommandUsageException("Missing argument");
+        }
+        return getString(index);
+    }
+
+    /**
+     * Return the argument at the given index as a String, or generate suggestions
+     * if that argument is being completed.
+     *
+     * @throws CommandException if the argument is missing
+     * @throws SuggestException if the argument is being completed
+     */
+    public String string(int index, Iterable<String> choices) throws CommandException, SuggestException {
+        suggestArgument(index, choices);
+        return string(index);
+    }
+
+    public Optional<String> tryString(int index, Iterable<String> choices) throws SuggestException {
+        suggestArgument(index, choices);
+        return tryString(index);
     }
 
     public String getJoinedStrings(int initialIndex) {
@@ -216,9 +325,68 @@ public class CommandContext {
         }
         return buffer.toString();
     }
-    
+
+    public String getJoinedStrings(int initialIndex, String def) {
+        return initialIndex < originalArgIndices.size() ? getJoinedStrings(initialIndex) : def;
+    }
+
+    /**
+     * Return the rest of the command line, starting at the given argument index.
+     *
+     * Any flags that appear after the given index are included in the result.
+     *
+     * @throws CommandException if the argument is missing
+     */
+    public String joinedStrings(int initialIndex) throws CommandException {
+        if(initialIndex >= originalArgIndices.size()) {
+            throw new CommandUsageException("Missing argument");
+        }
+        return getJoinedStrings(initialIndex);
+    }
+
+    public String joinedStrings(int initialIndex, Iterable<String> choices) throws CommandException, SuggestException {
+        suggestJoinedArguments(initialIndex, choices);
+        return joinedStrings(initialIndex);
+    }
+
+    public Optional<String> tryJoinedStrings(int initialIndex) {
+        return initialIndex < originalArgIndices.size() ? Optional.of(getJoinedStrings(initialIndex))
+                                                        : Optional.empty();
+    }
+
+    public Optional<String> tryJoinedStrings(int initialIndex, Iterable<String> choices) throws SuggestException {
+        suggestJoinedArguments(initialIndex, choices);
+        return tryJoinedStrings(initialIndex);
+    }
+
     public String getRemainingString(int start) {
         return getString(start, parsedArgs.size() - 1);
+    }
+
+    /**
+     * Return the given argument and all arguments after it, joined with spaces.
+     *
+     * Flags are never included in the result, even if they appear between between
+     * the arguments that are included.
+     *
+     * @throws CommandException if the argument is missing
+     */
+    public String remainingString(int start) throws CommandException {
+        return string(start, parsedArgs.size() - 1);
+    }
+
+    public String remainingString(int start, Iterable<String> choices) throws CommandException, SuggestException {
+        suggestJoinedArguments(start, choices);
+        return remainingString(start);
+    }
+
+    public Optional<String> tryRemainingString(int start) {
+        return tryString(start, parsedArgs.size() - 1);
+    }
+
+    public Optional<String> tryRemainingString(int start, Iterable<String> choices) throws SuggestException {
+        suggestJoinedArguments(start, choices);
+        return tryRemainingString(start);
     }
 
     public String getString(int start, int end) {
@@ -227,6 +395,18 @@ public class CommandContext {
             buffer.append(" ").append(parsedArgs.get(i));
         }
         return buffer.toString();
+    }
+
+    public String string(int start, int end) throws CommandException {
+        if(start >= parsedArgs.size() || end >= parsedArgs.size()) {
+            throw new CommandUsageException("Missing argument");
+        }
+        return getString(start, end);
+    }
+
+    public Optional<String> tryString(int start, int end) {
+        return start < parsedArgs.size() && end < parsedArgs.size() ? Optional.of(getString(start, end))
+                                                                    : Optional.empty();
     }
 
     public int getInteger(int index) throws CommandNumberFormatException {
@@ -291,7 +471,7 @@ public class CommandContext {
         return valueFlags;
     }
 
-    public String getFlag(char ch) {
+    public @Nullable String getFlag(char ch) {
         return valueFlags.get(ch);
     }
 
@@ -302,6 +482,20 @@ public class CommandContext {
         }
 
         return value;
+    }
+
+    public @Nullable String flagOrNull(char ch, Iterable<String> choices) throws SuggestException {
+        suggestFlag(ch, choices);
+        return getFlag(ch);
+    }
+
+    public Optional<String> tryFlag(char ch) {
+        return Optional.ofNullable(getFlag(ch));
+    }
+
+    public Optional<String> tryFlag(char ch, Iterable<String> choices) throws SuggestException {
+        suggestFlag(ch, choices);
+        return tryFlag(ch);
     }
 
     public int getFlagInteger(char ch) throws CommandNumberFormatException {
