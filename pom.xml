@@ -3,7 +3,7 @@
   <groupId>com.sk89q</groupId>
   <artifactId>command-framework-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.9-SNAPSHOT</version>
+  <version>1.11-SNAPSHOT</version>
   <name>Sk89q Command Framework</name>
   <description>sk89q's command system from WorldEdit factored out</description>
 
@@ -18,17 +18,6 @@
     <developerConnection>scm:git:git@github.com:OvercastNetwork/sk89q-command-framework.git</developerConnection>
     <url>https://github.com/OvercastNetwork/sk89q-command-framework</url>
   </scm>
-
-  <distributionManagement>
-    <repository>
-      <id>overcast-deployment</id>
-      <url>https://repo.oc.tc/content/repositories/releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>overcast-deployment</id>
-      <url>https://repo.oc.tc/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <build>
     <sourceDirectory>${project.basedir}/src/main/java/</sourceDirectory>
