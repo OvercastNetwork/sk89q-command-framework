@@ -3,11 +3,11 @@
   <parent>
     <groupId>com.sk89q</groupId>
     <artifactId>command-framework-parent</artifactId>
-    <version>1.9-SNAPSHOT</version>
+    <version>1.11-SNAPSHOT</version>
   </parent>
   <artifactId>command-framework-bungee</artifactId>
   <packaging>jar</packaging>
-  <version>1.9-SNAPSHOT</version>
+  <version>1.11-SNAPSHOT</version>
   <name>Sk89q Command Framework for BungeeCord</name>
   <description>Supporting classes for using the command framework on BungeeCord.</description>
 
@@ -22,12 +22,12 @@
     <dependency>
       <groupId>com.sk89q</groupId>
       <artifactId>command-framework-core</artifactId>
-      <version>1.9-SNAPSHOT</version>
+      <version>1.11-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>tc.oc</groupId>
       <artifactId>bungeecord-api</artifactId>
-      <version>1.9-SNAPSHOT</version>
+      <version>1.11-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
