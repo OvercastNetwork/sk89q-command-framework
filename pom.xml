@@ -19,15 +19,26 @@
     <url>https://github.com/OvercastNetwork/sk89q-command-framework</url>
   </scm>
 
+  <repositories>
+      <repository>
+          <id>pa-snapshots</id>
+          <url>https://repo.extension.ws/content/repositories/snapshots</url>
+      </repository>
+      <repository>
+          <id>pa-releases</id>
+          <url>https://repo.extension.ws/content/repositories/releases</url>
+      </repository>
+  </repositories>
+
   <distributionManagement>
-    <repository>
-      <id>overcast-deployment</id>
-      <url>https://repo.oc.tc/content/repositories/releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>overcast-deployment</id>
-      <url>https://repo.oc.tc/content/repositories/snapshots</url>
-    </snapshotRepository>
+      <repository>
+          <id>pa-deployment</id>
+          <url>https://repo.extension.ws/content/repositories/releases</url>
+      </repository>
+      <snapshotRepository>
+          <id>pa-deployment</id>
+          <url>https://repo.extension.ws/content/repositories/snapshots</url>
+      </snapshotRepository>
   </distributionManagement>
 
   <build>
