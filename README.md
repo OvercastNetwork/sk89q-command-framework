@@ -1,6 +1,8 @@
 sk89q-command-framework
 =======================
 
+**NOTE**: This repository is no longer maintained, but a [second iteration](https://github.com/Electroid/intake) of this framework is still active.
+
 sk89q-command-framework is the command framework from sk89q's WorldEdit. It has been factored out so it may be used in other projects without having to include WorldEdit as a dependency.
 
 Compiling
