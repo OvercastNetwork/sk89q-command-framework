@@ -3,7 +3,7 @@
   <groupId>com.sk89q</groupId>
   <artifactId>command-framework-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.9-SNAPSHOT</version>
+  <version>1.11-SNAPSHOT</version>
   <name>Sk89q Command Framework</name>
   <description>sk89q's command system from WorldEdit factored out</description>
 
@@ -21,25 +21,10 @@
 
   <repositories>
       <repository>
-          <id>pa-snapshots</id>
-          <url>https://repo.extension.ws/content/repositories/snapshots</url>
-      </repository>
-      <repository>
-          <id>pa-releases</id>
-          <url>https://repo.extension.ws/content/repositories/releases</url>
+          <id>jitpack.io</id>
+          <url>https://jitpack.io</url>
       </repository>
   </repositories>
-
-  <distributionManagement>
-      <repository>
-          <id>pa-deployment</id>
-          <url>https://repo.extension.ws/content/repositories/releases</url>
-      </repository>
-      <snapshotRepository>
-          <id>pa-deployment</id>
-          <url>https://repo.extension.ws/content/repositories/snapshots</url>
-      </snapshotRepository>
-  </distributionManagement>
 
   <build>
     <sourceDirectory>${project.basedir}/src/main/java/</sourceDirectory>
